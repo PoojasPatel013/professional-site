@@ -8,7 +8,7 @@ import ProjectsSection from '../components/ProjectsSection/ProjectsSection';
 import ExperienceSection from '../components/ExperienceSection/ExperienceSection';
 import ContactSection from '../components/ContactSection/ContactSection';
 
-const FluidGlass = lazy(() => import('../components/FluidGlass/FluidGlass'));
+import FluidCursorBackground from '../components/FluidCursorBackground/FluidCursorBackground';
 
 const IndexPage = () => {
   const isBrowser = typeof window !== 'undefined';
@@ -21,11 +21,7 @@ const IndexPage = () => {
       </Helmet>
 
       {/* Global Background Interactive Blob */}
-      {isBrowser && (
-        <Suspense fallback={<div className="fixed inset-0 z-[-1] bg-offwhite" />}>
-          <FluidGlass />
-        </Suspense>
-      )}
+      {isBrowser && <FluidCursorBackground />}
 
       {/* Animated Full-Screen Overlay Hamburger Menu */}
       <StaggeredMenu />
