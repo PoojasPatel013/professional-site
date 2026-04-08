@@ -1,108 +1,101 @@
-/**
- * BlurText — ReactBits-style animated text component (JS + CSS variant)
- *
- * Based on the ReactBits open-source library (https://reactbits.dev)
- * Requires: framer-motion  →  npm install framer-motion
- *
- * Props:
- *  text          {string}   — The text to animate
- *  animateBy     {string}   — 'words' | 'letters'  (default: 'words')
- *  direction     {string}   — 'top' | 'bottom'      (default: 'top')
- *  delay         {number}   — ms stagger between words/letters (default: 80)
- *  duration      {number}   — seconds each element takes to appear (default: 0.55)
- *  threshold     {number}   — IntersectionObserver threshold (default: 0.1)
- *  rootMargin    {string}   — IntersectionObserver rootMargin (default: '0px')
- *  className     {string}   — extra class names for the wrapper span
- *  onAnimationComplete {fn} — fires once the last element finishes
- */
+import { motion } from 'framer-motion';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+const buildKeyframes = (from, steps) => {
+  const keys = new Set([...Object.keys(from), ...steps.flatMap(s => Object.keys(s))]);
+
+  const keyframes = {};
+  keys.forEach(k => {
+    keyframes[k] = [from[k], ...steps.map(s => s[k])];
+  });
+  return keyframes;
+};
 
 const BlurText = ({
   text = '',
+  delay = 200,
+  className = '',
   animateBy = 'words',
   direction = 'top',
-  delay = 80,
-  duration = 0.55,
   threshold = 0.1,
   rootMargin = '0px',
-  className = '',
+  animationFrom,
+  animationTo,
+  easing = t => t,
   onAnimationComplete,
+  stepDuration = 0.35
 }) => {
-  const controls = useAnimation();
-  const ref = useRef(null);
-  const [hasAnimated, setHasAnimated] = useState(false);
-
-  // Split text into words or letters
   const elements = animateBy === 'words' ? text.split(' ') : text.split('');
+  const [inView, setInView] = useState(false);
+  const ref = useRef(null);
 
-  // Variants for the motion span
-  const hiddenVariant = {
-    opacity: 0,
-    filter: 'blur(10px)',
-    y: direction === 'top' ? -20 : 20,
-  };
-
-  const visibleVariant = {
-    opacity: 1,
-    filter: 'blur(0px)',
-    y: 0,
-  };
-
-  // Intersection Observer to trigger once the text is in view
   useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-
+    if (!ref.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated) {
-          controls.start('visible');
-          setHasAnimated(true);
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.unobserve(ref.current);
         }
       },
       { threshold, rootMargin }
     );
-
-    observer.observe(node);
+    observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [controls, hasAnimated, rootMargin, threshold]);
+  }, [threshold, rootMargin]);
+
+  const defaultFrom = useMemo(
+    () =>
+      direction === 'top' ? { filter: 'blur(10px)', opacity: 0, y: -50 } : { filter: 'blur(10px)', opacity: 0, y: 50 },
+    [direction]
+  );
+
+  const defaultTo = useMemo(
+    () => [
+      {
+        filter: 'blur(5px)',
+        opacity: 0.5,
+        y: direction === 'top' ? 5 : -5
+      },
+      { filter: 'blur(0px)', opacity: 1, y: 0 }
+    ],
+    [direction]
+  );
+
+  const fromSnapshot = animationFrom ?? defaultFrom;
+  const toSnapshots = animationTo ?? defaultTo;
+
+  const stepCount = toSnapshots.length + 1;
+  const totalDuration = stepDuration * (stepCount - 1);
+  const times = Array.from({ length: stepCount }, (_, i) => (stepCount === 1 ? 0 : i / (stepCount - 1)));
 
   return (
-    <span
-      ref={ref}
-      className={`blur-text-wrapper ${className}`}
-      style={{ display: 'inline-block' }}
-      aria-label={text}
-    >
-      {elements.map((segment, index) => (
-        <motion.span
-          key={`${segment}-${index}`}
-          initial="hidden"
-          animate={controls}
-          variants={{
-            hidden: hiddenVariant,
-            visible: visibleVariant,
-          }}
-          transition={{
-            duration,
-            delay: (index * delay) / 1000,
-            ease: [0.2, 0.65, 0.3, 0.9],
-          }}
-          onAnimationComplete={
-            index === elements.length - 1 ? onAnimationComplete : undefined
-          }
-          style={{ display: 'inline-block', willChange: 'transform, opacity, filter' }}
-        >
-          {segment}
-          {/* Re-insert space between words */}
-          {animateBy === 'words' && index < elements.length - 1
-            ? '\u00A0'
-            : null}
-        </motion.span>
-      ))}
-    </span>
+    <p ref={ref} className={`blur-text ${className} flex flex-wrap`}>
+      {elements.map((segment, index) => {
+        const animateKeyframes = buildKeyframes(fromSnapshot, toSnapshots);
+
+        const spanTransition = {
+          duration: totalDuration,
+          times,
+          delay: (index * delay) / 1000
+        };
+        spanTransition.ease = easing;
+
+        return (
+          <motion.span
+            className="inline-block will-change-[transform,filter,opacity]"
+            key={index}
+            initial={fromSnapshot}
+            animate={inView ? animateKeyframes : fromSnapshot}
+            transition={spanTransition}
+            onAnimationComplete={index === elements.length - 1 ? onAnimationComplete : undefined}
+          >
+            {segment === ' ' ? '\u00A0' : segment}
+            {animateBy === 'words' && index < elements.length - 1 && '\u00A0'}
+          </motion.span>
+        );
+      })}
+    </p>
   );
 };
 

@@ -11,12 +11,19 @@
     "clean": "gatsby clean"
   },
   "dependencies": {
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
     "framer-motion": "^11.18.2",
     "gatsby": "^5.13.0",
     "gatsby-plugin-react-helmet": "^6.16.0",
+    "gsap": "^3.14.2",
+    "lenis": "^1.3.21",
+    "maath": "^0.10.8",
+    "motion": "^12.38.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-helmet": "^6.1.0"
+    "react-helmet": "^6.1.0",
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
