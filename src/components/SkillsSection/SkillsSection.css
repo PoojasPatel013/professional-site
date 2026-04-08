@@ -1,0 +1,193 @@
+/* ============================================================
+   SkillsSection.css — Bento Grid Skills Section
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Section wrapper ──────────────────────────────────────── */
+.skills-section {
+  background-color: #fafafa;
+  padding: 7rem 2rem;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Shared container ─────────────────────────────────────── */
+.section-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Shared section header ────────────────────────────────── */
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.section-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 0 0 0.75rem;
+}
+
+.section-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.025em;
+  margin: 0 0 1rem;
+  line-height: 1.1;
+}
+
+.section-subtitle {
+  font-size: clamp(0.95rem, 2vw, 1.05rem);
+  color: #64748b;
+  font-weight: 400;
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+/* ── Bento grid ───────────────────────────────────────────── */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+/* ── Bento card ───────────────────────────────────────────── */
+.bento-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem 1.75rem 2rem;
+  box-shadow:
+    0 4px 28px rgba(30, 41, 59, 0.07),
+    0 1px 4px rgba(30, 41, 59, 0.04);
+  overflow: hidden;
+  /* Entrance animation state */
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
+}
+
+.bento-card--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bento-card:hover {
+  box-shadow:
+    0 12px 40px rgba(30, 41, 59, 0.1),
+    0 2px 6px rgba(30, 41, 59, 0.05);
+  transform: translateY(-3px);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
+}
+
+/* Override entrance transition on hover once visible */
+.bento-card--visible:hover {
+  opacity: 1;
+}
+
+/* ── Top accent bar ───────────────────────────────────────── */
+.bento-card__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-accent);
+  border-radius: 20px 20px 0 0;
+}
+
+/* ── Card header ──────────────────────────────────────────── */
+.bento-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.bento-card__icon {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 10px;
+  background: var(--card-accent-light);
+  flex-shrink: 0;
+}
+
+.bento-card__title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ── Skill pills container ────────────────────────────────── */
+.bento-card__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ── Individual pill ──────────────────────────────────────── */
+.skill-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  color: var(--pill-accent);
+  background: color-mix(in srgb, var(--pill-accent) 8%, #fff);
+  letter-spacing: 0.01em;
+  transition: background 0.2s ease, transform 0.2s ease;
+  cursor: default;
+}
+
+.skill-pill:hover {
+  background: color-mix(in srgb, var(--pill-accent) 15%, #fff);
+  transform: translateY(-1px);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .bento-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bento-card:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .skills-section {
+    padding: 5rem 1.25rem;
+  }
+
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bento-card:last-child {
+    grid-column: auto;
+  }
+}
