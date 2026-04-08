@@ -15,16 +15,9 @@
 }
 
 @layer utilities {
-  .snap-y-container {
-    height: 100vh;
-    overflow-y: auto;
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-  }
-  
   .snap-section {
-    height: 100vh;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
+    min-height: 100vh;
+    padding-top: 5rem;
+    padding-bottom: 5rem;
   }
 }

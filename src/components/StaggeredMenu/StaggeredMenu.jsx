@@ -1,58 +1,83 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const StaggeredMenu = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
   const links = [
-    { name: 'About', href: '#about' },
+    { name: 'Home', href: '#about' },
+    { name: 'Skills', href: '#skills' },
     { name: 'Projects', href: '#projects' },
     { name: 'Experience', href: '#experience' },
     { name: 'Connect', href: '#connect' },
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
+  const menuVariants = {
+    closed: {
+      x: '100%',
       transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2, // slightly delayed so the page can load first
+        staggerChildren: 0.05,
+        staggerDirection: -1,
+        when: 'afterChildren',
+      },
+    },
+    open: {
+      x: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+        damping: 20,
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: -20 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { type: 'spring', stiffness: 300, damping: 24 },
-    },
+    closed: { x: 50, opacity: 0 },
+    open: { x: 0, opacity: 1 },
   };
 
   return (
-    <motion.nav 
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-6 md:px-12 md:py-8 mix-blend-difference text-white"
-      initial="hidden"
-      animate="show"
-      variants={containerVariants}
-    >
-      <motion.div variants={itemVariants} className="font-outfit font-bold text-xl tracking-tighter">
-        PP<span className="text-slate-400">.</span>
-      </motion.div>
-      
-      <ul className="flex items-center gap-6 md:gap-10">
-        {links.map((link) => (
-          <motion.li key={link.name} variants={itemVariants}>
-            <a 
-              href={link.href} 
-              className="font-inter text-sm md:text-base tracking-wide hover:opacity-75 transition-opacity"
-            >
-              {link.name}
-            </a>
-          </motion.li>
-        ))}
-      </ul>
-    </motion.nav>
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-6 md:px-12 md:py-8 mix-blend-difference text-white">
+        <div className="font-outfit font-bold text-2xl tracking-tighter mix-blend-difference">
+          PP<span className="text-slate-400">.</span>
+        </div>
+        <button
+          className="z-50 font-outfit uppercase tracking-widest text-sm font-bold mix-blend-difference hover:text-slate-300 transition-colors"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? 'CLOSE' : 'MENU'}
+        </button>
+      </nav>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            variants={menuVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            className="fixed inset-0 z-40 bg-slate-900 flex flex-col items-center justify-center"
+          >
+            <ul className="flex flex-col gap-6 text-center">
+              {links.map((link) => (
+                <motion.li key={link.name} variants={itemVariants}>
+                  <a
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className="font-outfit text-5xl md:text-7xl font-black text-white hover:italic transition-all uppercase tracking-tighter"
+                  >
+                    {link.name}
+                  </a>
+                </motion.li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

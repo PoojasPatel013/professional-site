@@ -3,12 +3,11 @@ import { Helmet } from 'react-helmet';
 
 import StaggeredMenu from '../components/StaggeredMenu/StaggeredMenu';
 import HeroSection from '../components/HeroSection/HeroSection';
+import SkillsSection from '../components/SkillsSection/SkillsSection';
 import ProjectsSection from '../components/ProjectsSection/ProjectsSection';
 import ExperienceSection from '../components/ExperienceSection/ExperienceSection';
 import ContactSection from '../components/ContactSection/ContactSection';
 
-// Dynamically import FluidGlass since it relies on window/mousemove objects
-// which throw errors during Gatsby's SSR (Server-Side Rendering) build phase.
 const FluidGlass = lazy(() => import('../components/FluidGlass/FluidGlass'));
 
 const IndexPage = () => {
@@ -28,19 +27,13 @@ const IndexPage = () => {
         </Suspense>
       )}
 
-      {/* Animated Fixed Header Menu */}
+      {/* Animated Full-Screen Overlay Hamburger Menu */}
       <StaggeredMenu />
 
-      {/* 
-        Snap-Y scrolling container for the entire viewport. 
-        Each section acts as a slide.
-      */}
-      <main className="snap-y-container w-full">
+      <main className="w-full">
         <HeroSection />
-        
-        {/* We omitted snap constraints on the projects page specifically as the ScrollStack works via scrolling over height. */}
+        <SkillsSection />
         <ProjectsSection />
-        
         <ExperienceSection />
         <ContactSection />
       </main>
