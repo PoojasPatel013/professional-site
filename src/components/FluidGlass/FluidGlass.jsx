@@ -4,9 +4,7 @@ import * as THREE from 'three';
 import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';
 import {
   useFBO,
-  Scroll,
   Preload,
-  ScrollControls,
   MeshTransmissionMaterial
 } from '@react-three/drei';
 import { easing } from 'maath';
@@ -26,16 +24,10 @@ export default function FluidGlass({ mode = 'lens', lensProps = {}, barProps = {
 
   return (
     <Canvas camera={{ position: [0, 0, 20], fov: 15 }} gl={{ alpha: true }}>
-      <ScrollControls damping={0.2} pages={3} distance={0.4}>
-        {mode === 'bar' && <NavItems items={navItems} />}
-        <Wrapper modeProps={modeProps}>
-          <Scroll>
-            {/* We can hide default Images/Typography since it's just a background cursor */}
-          </Scroll>
-          <Scroll html />
-          <Preload />
-        </Wrapper>
-      </ScrollControls>
+      {mode === 'bar' && <NavItems items={navItems} />}
+      <Wrapper modeProps={modeProps}>
+        <Preload />
+      </Wrapper>
     </Canvas>
   );
 }

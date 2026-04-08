@@ -31,24 +31,8 @@ const ProjectsSection = () => {
         </h2>
       </div>
       
-      {/* Scroll Stack dynamically handles its own Lenis scrolling and pinning */}
-      <ScrollStack useWindowScroll={true} itemDistance={100} itemStackDistance={30} blurAmount={0}>
-        {PROJECTS.map((project) => (
-          <ScrollStackItem key={project.id}>
-            <div className="flex flex-col gap-4 h-full justify-center">
-              <span className="text-sm md:text-base font-outfit font-bold tracking-widest uppercase text-slate-400">
-                {project.header}
-              </span>
-              <h3 className="font-outfit text-4xl md:text-6xl font-black text-slate-800 tracking-tight leading-tight">
-                {project.title}
-              </h3>
-              <p className="font-inter text-xl md:text-2xl text-slate-500 font-light max-w-2xl mt-4">
-                {project.subtitle}
-              </p>
-            </div>
-          </ScrollStackItem>
-        ))}
-      </ScrollStack>
+      {/* Scroll Stack using framer-motion's useScroll and sticky positioning for flawless performance */}
+      <ScrollStack projects={PROJECTS} />
     </section>
   );
 };
