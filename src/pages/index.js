@@ -8,7 +8,7 @@ import ProjectsSection from '../components/ProjectsSection/ProjectsSection';
 import ExperienceSection from '../components/ExperienceSection/ExperienceSection';
 import ContactSection from '../components/ContactSection/ContactSection';
 
-import FluidCursorBackground from '../components/FluidCursorBackground/FluidCursorBackground';
+import FluidGlass from '../components/FluidGlass/FluidGlass';
 
 const IndexPage = () => {
   const isBrowser = typeof window !== 'undefined';
@@ -20,13 +20,25 @@ const IndexPage = () => {
         <meta name="description" content="Portfolio of Pooja Patel — Lucid Architect Design." />
       </Helmet>
 
-      {/* Global Background Interactive Blob */}
-      {isBrowser && <FluidCursorBackground />}
+      {/* Interactive Glass Lens — fixed overlay, follows cursor, passes through clicks */}
+      {isBrowser && (
+        <FluidGlass 
+          mode="lens" 
+          lensProps={{
+            scale: 0.25,
+            ior: 1.15,
+            thickness: 5,
+            chromaticAberration: 0.1,
+            anisotropy: 0.01  
+          }}
+        />
+      )}
 
       {/* Animated Full-Screen Overlay Hamburger Menu */}
       <StaggeredMenu />
 
-      <main className="w-full">
+      {/* Normal DOM page content — scroll, ScrollStack, Contact all work natively */}
+      <main className="w-full relative z-10">
         <HeroSection />
         <SkillsSection />
         <ProjectsSection />

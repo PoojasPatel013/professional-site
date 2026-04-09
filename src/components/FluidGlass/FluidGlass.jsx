@@ -1,140 +1,98 @@
-/* eslint-disable react/no-unknown-property */
-import React, { useRef, useState, useEffect, memo } from 'react';
-import * as THREE from 'three';
-import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';
-import {
-  useFBO,
-  Preload,
-  MeshTransmissionMaterial
-} from '@react-three/drei';
-import { easing } from 'maath';
+import React, { useRef, useEffect, useCallback } from 'react';
+import gsap from 'gsap';
 
-export default function FluidGlass({ mode = 'lens', lensProps = {}, barProps = {}, cubeProps = {} }) {
-  const Wrapper = mode === 'bar' ? Bar : mode === 'cube' ? Cube : Lens;
-  const rawOverrides = mode === 'bar' ? barProps : mode === 'cube' ? cubeProps : lensProps;
-
-  const {
-    navItems = [
-      { label: 'Home', link: '' },
-      { label: 'About', link: '' },
-      { label: 'Contact', link: '' }
-    ],
-    ...modeProps
-  } = rawOverrides;
-
-  return (
-    <Canvas camera={{ position: [0, 0, 20], fov: 15 }} gl={{ alpha: true }}>
-      {mode === 'bar' && <NavItems items={navItems} />}
-      <Wrapper modeProps={modeProps}>
-        <Preload />
-      </Wrapper>
-    </Canvas>
-  );
-}
-
-const ModeWrapper = memo(function ModeWrapper({
-  children,
-  geometryKey,
-  lockToBottom = false,
-  followPointer = true,
-  modeProps = {},
-  ...props
+/**
+ * FluidGlass — A real glassmorphism cursor-following overlay.
+ * Uses CSS backdrop-filter to actually refract/blur the page content underneath.
+ * Pointer-events: none so it never interferes with clicks or scrolling.
+ */
+export default function FluidGlass({
+  size = 280,
+  blur = 18,
+  saturation = 1.8,
+  brightness = 1.15,
+  borderRadius = '50%',
+  tint = 'rgba(232, 213, 245, 0.12)',
+  borderColor = 'rgba(255,255,255,0.25)',
+  shadowColor = 'rgba(180, 140, 220, 0.2)',
 }) {
-  const ref = useRef();
-  const buffer = useFBO();
-  const { viewport: vp } = useThree();
-  const [scene] = useState(() => new THREE.Scene());
-  const geoWidthRef = useRef(1);
+  const glassRef = useRef(null);
+  const pos = useRef({ x: -500, y: -500 });
+  const visible = useRef(false);
 
-  const defaultGeometry = React.useMemo(() => {
-    if (geometryKey === 'Cube') return new THREE.BoxGeometry(2, 2, 2);
-    // Cylinder acts as the Lens
-    return new THREE.CylinderGeometry(1.5, 1.5, 0.2, 64);
-  }, [geometryKey]);
+  const animate = useCallback(() => {
+    if (!glassRef.current) return;
+
+    gsap.to(glassRef.current, {
+      x: pos.current.x - size / 2,
+      y: pos.current.y - size / 2,
+      duration: 0.45,
+      ease: 'power3.out',
+      overwrite: 'auto',
+    });
+  }, [size]);
 
   useEffect(() => {
-    defaultGeometry.computeBoundingBox();
-    geoWidthRef.current = defaultGeometry.boundingBox.max.x - defaultGeometry.boundingBox.min.x || 1;
-  }, [defaultGeometry]);
+    const handleMouseMove = (e) => {
+      pos.current = { x: e.clientX, y: e.clientY };
 
-  useFrame((state, delta) => {
-    const { gl, viewport, pointer, camera } = state;
-    const v = viewport.getCurrentViewport(camera, [0, 0, 15]);
+      if (!visible.current && glassRef.current) {
+        visible.current = true;
+        gsap.to(glassRef.current, { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out' });
+      }
 
-    const destX = followPointer ? (pointer.x * v.width) / 2 : 0;
-    const destY = lockToBottom ? -v.height / 2 + 0.2 : followPointer ? (pointer.y * v.height) / 2 : 0;
-    
-    if (ref.current) {
-        easing.damp3(ref.current.position, [destX, destY, 15], 0.15, delta);
+      animate();
+    };
 
-        if (modeProps.scale == null) {
-        const maxWorld = v.width * 0.9;
-        const desired = maxWorld / geoWidthRef.current;
-        ref.current.scale.setScalar(Math.min(0.15, desired));
-        }
-    }
+    const handleMouseLeave = () => {
+      visible.current = false;
+      if (glassRef.current) {
+        gsap.to(glassRef.current, { opacity: 0, scale: 0.6, duration: 0.4, ease: 'power2.in' });
+      }
+    };
 
-    gl.setRenderTarget(buffer);
-    gl.render(scene, camera);
-    gl.setRenderTarget(null);
+    window.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseleave', handleMouseLeave);
 
-    // Background Color set to soft pastel blue/gray
-    gl.setClearColor(0xFAFAFA, 1);
-  });
-
-  const { scale, ior, thickness, anisotropy, chromaticAberration, ...extraMat } = modeProps;
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [animate]);
 
   return (
-    <>
-      {createPortal(children, scene)}
-      <mesh scale={[vp.width, vp.height, 1]}>
-        <planeGeometry />
-        <meshBasicMaterial map={buffer.texture} transparent />
-      </mesh>
-      <mesh ref={ref} scale={scale ?? 0.15} rotation-x={Math.PI / 2} geometry={defaultGeometry} {...props}>
-        <MeshTransmissionMaterial
-          buffer={buffer.texture}
-          ior={ior ?? 1.15}
-          thickness={thickness ?? 5}
-          anisotropy={anisotropy ?? 0.01}
-          chromaticAberration={chromaticAberration ?? 0.1}
-          {...extraMat}
-        />
-      </mesh>
-    </>
-  );
-});
+    <div
+      ref={glassRef}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: size,
+        height: size,
+        borderRadius,
+        pointerEvents: 'none',
+        zIndex: 9999,
+        opacity: 0,
+        transform: 'scale(0.6)',
+        willChange: 'transform, opacity',
 
-function Lens({ modeProps, ...p }) {
-  return <ModeWrapper geometryKey="Cylinder" followPointer modeProps={modeProps} {...p} />;
-}
+        /* ---- True Glassmorphism ---- */
+        backdropFilter: `blur(${blur}px) saturate(${saturation}) brightness(${brightness})`,
+        WebkitBackdropFilter: `blur(${blur}px) saturate(${saturation}) brightness(${brightness})`,
+        background: tint,
+        border: `1.5px solid ${borderColor}`,
+        boxShadow: `
+          0 8px 32px ${shadowColor},
+          inset 0 0 0 0.5px rgba(255,255,255,0.15),
+          inset 0 1px 0 rgba(255,255,255,0.3)
+        `,
 
-function Cube({ modeProps, ...p }) {
-  return <ModeWrapper geometryKey="Cube" followPointer modeProps={modeProps} {...p} />;
-}
-
-function Bar({ modeProps = {}, ...p }) {
-  const defaultMat = {
-    transmission: 1,
-    roughness: 0,
-    thickness: 10,
-    ior: 1.15,
-    color: '#ffffff',
-    attenuationColor: '#ffffff',
-    attenuationDistance: 0.25
-  };
-
-  return (
-    <ModeWrapper
-      geometryKey="Cube"
-      lockToBottom
-      followPointer={false}
-      modeProps={{ ...defaultMat, ...modeProps }}
-      {...p}
+        /* Subtle inner light refraction */
+        backgroundImage: `
+          radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.25) 0%, transparent 60%),
+          radial-gradient(ellipse at 70% 80%, rgba(200,170,240,0.1) 0%, transparent 50%)
+        `,
+      }}
     />
   );
-}
-
-function NavItems({ items }) {
-  return null;
 }

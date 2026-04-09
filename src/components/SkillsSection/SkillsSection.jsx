@@ -3,10 +3,10 @@ import FlowingMenu from '../FlowingMenu/FlowingMenu';
 
 const SkillsSection = () => {
   const SKILL_ITEMS = [
-    { text: 'Systems architecture', href: '#' },
-    { text: 'Applied ML & AI', href: '#' },
-    { text: 'Cloud Systems', href: '#' },
-    { text: 'Security', href: '#' },
+    { link: '#', text: 'Systems architecture', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop' },
+    { link: '#', text: 'Applied ML & AI', image: 'https://images.unsplash.com/photo-1555255707-c07966088b7b?q=80&w=1200&auto=format&fit=crop' },
+    { link: '#', text: 'Cloud Systems', image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=1200&auto=format&fit=crop' },
+    { link: '#', text: 'Security', image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200&auto=format&fit=crop' },
   ];
 
   return (
@@ -27,8 +27,16 @@ const SkillsSection = () => {
         </header>
 
         {/* Flowing Menu integration for skills */}
-        <div className="mt-16 w-full flex justify-center">
-          <FlowingMenu items={SKILL_ITEMS} />
+        <div className="mt-16 w-full flex justify-center h-[600px] relative">
+          <FlowingMenu 
+            items={SKILL_ITEMS}
+            speed={15}
+            textColor="#0f172a" 
+            bgColor="transparent"
+            marqueeBgColor="#0f172a"
+            marqueeTextColor="#ffffff"
+            borderColor="#e2e8f0"
+          />
         </div>
       </div>
     </section>

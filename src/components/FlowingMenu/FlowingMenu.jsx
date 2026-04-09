@@ -1,79 +1,152 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useRef, useEffect, useState } from 'react';
+import { gsap } from 'gsap';
 
-const MenuItem = ({ text, href, index, hoveredIndex, setHoveredIndex }) => {
-  const isHovered = hoveredIndex === index;
-  const isOtherHovered = hoveredIndex !== null && hoveredIndex !== index;
+function FlowingMenu({
+  items = [],
+  speed = 15,
+  textColor = '#fff',
+  bgColor = '#060010',
+  marqueeBgColor = '#fff',
+  marqueeTextColor = '#060010',
+  borderColor = '#fff'
+}) {
+  return (
+    <div className="w-full h-full overflow-hidden" style={{ backgroundColor: bgColor }}>
+      <nav className="flex flex-col h-full m-0 p-0">
+        {items.map((item, idx) => (
+          <MenuItem
+            key={idx}
+            {...item}
+            speed={speed}
+            textColor={textColor}
+            marqueeBgColor={marqueeBgColor}
+            marqueeTextColor={marqueeTextColor}
+            borderColor={borderColor}
+            isFirst={idx === 0}
+          />
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+function MenuItem({ link, text, image, speed, textColor, marqueeBgColor, marqueeTextColor, borderColor, isFirst }) {
+  const itemRef = useRef(null);
+  const marqueeRef = useRef(null);
+  const marqueeInnerRef = useRef(null);
+  const animationRef = useRef(null);
+  const [repetitions, setRepetitions] = useState(4);
+
+  const animationDefaults = { duration: 0.6, ease: 'expo' };
+
+  const findClosestEdge = (mouseX, mouseY, width, height) => {
+    const topEdgeDist = (mouseX - width / 2) ** 2 + mouseY ** 2;
+    const bottomEdgeDist = (mouseX - width / 2) ** 2 + (mouseY - height) ** 2;
+    return topEdgeDist < bottomEdgeDist ? 'top' : 'bottom';
+  };
+
+  useEffect(() => {
+    const calculateRepetitions = () => {
+      if (!marqueeInnerRef.current) return;
+      const marqueeContent = marqueeInnerRef.current.querySelector('.marquee-part');
+      if (!marqueeContent) return;
+      const contentWidth = marqueeContent.offsetWidth;
+      const viewportWidth = window.innerWidth;
+      const needed = Math.ceil(viewportWidth / contentWidth) + 2;
+      setRepetitions(Math.max(4, needed));
+    };
+
+    calculateRepetitions();
+    window.addEventListener('resize', calculateRepetitions);
+    return () => window.removeEventListener('resize', calculateRepetitions);
+  }, [text, image]);
+
+  useEffect(() => {
+    const setupMarquee = () => {
+      if (!marqueeInnerRef.current) return;
+      const marqueeContent = marqueeInnerRef.current.querySelector('.marquee-part');
+      if (!marqueeContent) return;
+      const contentWidth = marqueeContent.offsetWidth;
+      if (contentWidth === 0) return;
+
+      if (animationRef.current) {
+        animationRef.current.kill();
+      }
+
+      animationRef.current = gsap.to(marqueeInnerRef.current, {
+        x: -contentWidth,
+        duration: speed,
+        ease: 'none',
+        repeat: -1
+      });
+    };
+
+    const timer = setTimeout(setupMarquee, 50);
+    return () => {
+      clearTimeout(timer);
+      if (animationRef.current) {
+        animationRef.current.kill();
+      }
+    };
+  }, [text, image, repetitions, speed]);
+
+  const handleMouseEnter = ev => {
+    if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
+    const rect = itemRef.current.getBoundingClientRect();
+    const edge = findClosestEdge(ev.clientX - rect.left, ev.clientY - rect.top, rect.width, rect.height);
+
+    gsap
+      .timeline({ defaults: animationDefaults })
+      .set(marqueeRef.current, { y: edge === 'top' ? '-101%' : '101%' }, 0)
+      .set(marqueeInnerRef.current, { y: edge === 'top' ? '101%' : '-101%' }, 0)
+      .to([marqueeRef.current, marqueeInnerRef.current], { y: '0%' }, 0);
+  };
+
+  const handleMouseLeave = ev => {
+    if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
+    const rect = itemRef.current.getBoundingClientRect();
+    const edge = findClosestEdge(ev.clientX - rect.left, ev.clientY - rect.top, rect.width, rect.height);
+
+    gsap
+      .timeline({ defaults: animationDefaults })
+      .to(marqueeRef.current, { y: edge === 'top' ? '-101%' : '101%' }, 0)
+      .to(marqueeInnerRef.current, { y: edge === 'top' ? '101%' : '-101%' }, 0);
+  };
 
   return (
-    <motion.li 
-      className="relative flex items-center justify-center py-4 md:py-6 cursor-pointer"
-      onMouseEnter={() => setHoveredIndex(index)}
-      onMouseLeave={() => setHoveredIndex(null)}
-      animate={{ opacity: isOtherHovered ? 0.3 : 1 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+    <div
+      className="flex-1 relative overflow-hidden text-center"
+      ref={itemRef}
+      style={{ borderTop: isFirst ? 'none' : `1px solid ${borderColor}` }}
     >
-      <a 
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="relative z-10 font-outfit text-5xl md:text-8xl font-black uppercase tracking-tighter text-slate-800 transition-all duration-500 ease-in-out"
-        style={{
-          fontStyle: isHovered ? 'italic' : 'normal',
-          transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-          display: 'inline-block'
-        }}
+      <a
+        className="flex items-center justify-center h-full relative cursor-pointer uppercase no-underline font-semibold text-[4vh]"
+        href={link}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{ color: textColor }}
       >
         {text}
       </a>
-      
-      {/* Organic blob underline effect that appears on hover */}
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            layoutId="hoverBlob"
-            initial={{ opacity: 0, scaleX: 0.8 }}
-            animate={{ opacity: 1, scaleX: 1 }}
-            exit={{ opacity: 0, scaleX: 0.8 }}
-            transition={{ type: "spring", stiffness: 300, damping: 24 }}
-            className="absolute bottom-4 left-0 right-0 h-[20px] md:h-[30px] rounded-full z-0 pointer-events-none mix-blend-multiply"
-            style={{
-              background: 'linear-gradient(90deg, rgba(135,170,220,0.6) 0%, rgba(180,200,230,0.2) 100%)',
-              filter: 'blur(8px)'
-            }}
-          />
-        )}
-      </AnimatePresence>
-    </motion.li>
-  );
-};
-
-const FlowingMenu = ({ items }) => {
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-
-  const defaultLinks = [
-    { text: 'GitHub', href: 'https://github.com/PoojasPatel013' },
-    { text: 'LinkedIn', href: 'https://linkedin.com/in/poojapatel013' },
-    { text: 'Email', href: 'mailto:poojaspatel1375@gmail.com' },
-  ];
-
-  const menuItems = items || defaultLinks;
-
-  return (
-    <div className="w-full h-full flex flex-col items-center justify-center">
-      <ul className="flex flex-col items-center justify-center w-full relative h-[400px]">
-        {menuItems.map((link, i) => (
-          <MenuItem 
-            key={link.text} 
-            {...link} 
-            index={i} 
-            hoveredIndex={hoveredIndex} 
-            setHoveredIndex={setHoveredIndex} 
-          />
-        ))}
-      </ul>
+      <div
+        className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none translate-y-[101%]"
+        ref={marqueeRef}
+        style={{ backgroundColor: marqueeBgColor }}
+      >
+        <div className="h-full w-fit flex" ref={marqueeInnerRef}>
+          {[...Array(repetitions)].map((_, idx) => (
+            <div className="marquee-part flex items-center flex-shrink-0" key={idx} style={{ color: marqueeTextColor }}>
+              <span className="whitespace-nowrap uppercase font-normal text-[4vh] leading-[1] px-[1vw]">{text}</span>
+              <div
+                className="w-[200px] h-[7vh] my-[2em] mx-[2vw] py-[1em] rounded-[50px] bg-cover bg-center"
+                style={{ backgroundImage: `url(${image})` }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default FlowingMenu;
